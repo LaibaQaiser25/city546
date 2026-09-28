@@ -171,7 +171,7 @@ When `frontend/dist` exists, Express serves the built SPA and the API from **one
 
 ### Deploying to Railway
 
-`railway.json` in the repo root configures the build, runs migrations and the admin seed before each deploy, starts the server and health-checks `/api/health`.
+`railway.json` in the repo root configures the build, runs migrations and the admin seed each time the server starts and health-checks `/api/health`.
 
 1. Sign up at [railway.com](https://railway.com) with GitHub. The free trial gives a one-time $5 credit for 30 days (1 GB RAM, 500 MB volume). After that, move to Hobby ($5/mo).
 2. **New Project → Deploy from GitHub repo** → pick this repo.
