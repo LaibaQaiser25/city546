@@ -13,7 +13,7 @@ export function createApp() {
   const app = express();
 
   app.disable('x-powered-by');
-  app.set('trust proxy', 1); // correct client IPs (rate limiting) behind a reverse proxy
+  app.set('trust proxy', env.TRUST_PROXY); // correct client IPs (rate limiting) behind reverse proxies
 
   app.use(
     helmet({

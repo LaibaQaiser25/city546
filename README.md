@@ -190,10 +190,19 @@ When `frontend/dist` exists, Express serves the built SPA and the API from **one
    | `UPLOAD_DIR` | `/data/uploads` |
    | `SEED_SAMPLE_POSTS` | `false` |
    | `AI_PROVIDER` | `none` (or `mock`); `anthropic` costs money per call |
-   | `CORS_ORIGIN` | your public URL, e.g. `https://city546-production.up.railway.app` |
+   | `CORS_ORIGIN` | your public site URL (the Vercel domain if the frontend is on Vercel) |
+   | `TRUST_PROXY` | `2` when the frontend is on Vercel (Vercel → Railway), otherwise `1` |
 
-6. **Settings → Networking → Generate Domain** (or add your own domain), then set `CORS_ORIGIN` to that URL and redeploy.
+6. **Settings → Networking → Generate Domain** (or add your own domain), then set `CORS_ORIGIN` to your public site URL and redeploy.
 7. Set a **usage limit** under account billing so the bill can't grow unexpectedly.
+
+#### Frontend on Vercel
+
+The auth cookie is `SameSite=Strict`, so the browser must talk to **one site**. `frontend/vercel.json` makes Vercel proxy `/api/*` and `/uploads/*` to Railway (and adds the SPA fallback), so readers only ever see the Vercel domain.
+
+1. In `frontend/vercel.json`, replace `RAILWAY_DOMAIN` with the Railway domain (e.g. `city546-production.up.railway.app`).
+2. In Vercel: **Settings → General → Root Directory** = `frontend`. Under **Environment Variables**, make sure `VITE_API_URL` is **not** set, so the app calls `/api` on its own domain.
+3. Redeploy on Vercel, then open `https://<vercel-domain>/api/health`. It should return `"database":"connected"`.
 
 Every push to the connected branch redeploys. Never point `npm test` at this database: the tests write and delete real rows.
 

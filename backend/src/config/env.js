@@ -35,6 +35,8 @@ export const env = {
   isProduction,
   isTest: NODE_ENV === 'test',
   PORT: Number(process.env.PORT) || 5000,
+  // Number of reverse proxies in front of the app (Railway alone = 1, Vercel rewrite → Railway = 2)
+  TRUST_PROXY: Number(process.env.TRUST_PROXY) || 1,
   DATABASE_URL: required('DATABASE_URL'),
   DATABASE_SSL: process.env.DATABASE_SSL === 'true',
   JWT_SECRET,
