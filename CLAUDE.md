@@ -27,6 +27,14 @@ Before finishing a change, run `npm test`, `npm run lint` and `npm run build`.
 - Git Bash heredocs mangle `\uXXXX` escapes and BOM characters. Edit files containing those with the Edit/Write tools, not `sed`/heredocs.
 - Admin credentials live in `.env` (`ADMIN_EMAIL` / `ADMIN_PASSWORD`). Point to that file; never echo the values.
 
+## Production / hosting
+- Production runs as **one process**: `npm run build && npm start`. With `NODE_ENV=production`, Express serves `frontend/dist` (SPA fallback for non-`/api` paths) and `UPLOAD_DIR`. It sits behind a reverse proxy (`trust proxy` = 1) and needs HTTPS, because of the auth cookie and the TikTok OAuth redirect.
+- Uploads are **files on disk, not in the DB**. Any host needs a persistent disk/volume for `UPLOAD_DIR`, and backups must cover both the DB (`pg_dump`) and that folder.
+- Hosted Postgres needing TLS (Neon, Supabase, RDS…): set `DATABASE_SSL=true`. For a DB on the same VPS, keep it `false` and bind Postgres to localhost only.
+- New DB: run `npm run db:migrate`, or restore a `pg_dump` into an empty DB instead of migrating.
+- **Never run `npm test` against a production `DATABASE_URL`**, because it writes and deletes real rows and changes `ai_settings`. Keep `AI_PROVIDER=mock|none` in production unless the user approves the Claude API cost.
+- The hosting host isn't chosen yet. Discussed so far (2026-09-28): Railway Hobby (app + Postgres + volume, about $7–10/mo, cost driven by image egress) or a Hetzner VPS (Postgres + PM2 + Nginx/certbot). Avoid Supabase's free plan (it pauses) and Render's free Postgres (it expires).
+
 ## Backend conventions
 - Route → `validate(schema, source)` (zod) → controller. Parsed input is on **`req.valid.body|query|params`**, because Express 5 makes `req.query` read-only.
 - Responses always go through `ok(res, data, { status, meta, message })`. Errors: throw `HttpError` helpers (`badRequest`, `notFound`, …). Express 5 forwards async rejections, so no wrapper is needed.
