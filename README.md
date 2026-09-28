@@ -169,6 +169,34 @@ When `frontend/dist` exists, Express serves the built SPA and the API from **one
 - Serve over **HTTPS**, because the auth cookie is marked `Secure` in production.
 - To host the frontend separately (Netlify, Vercel…), build it with `VITE_API_URL=https://api.example.com/api` and add that site's origin to `CORS_ORIGIN`. Cross-site cookies also require the API and the site to share a registrable domain, because the cookie is `SameSite=Strict`.
 
+### Deploying to Railway
+
+`railway.json` in the repo root configures the build, runs migrations and the admin seed before each deploy, starts the server and health-checks `/api/health`.
+
+1. Sign up at [railway.com](https://railway.com) with GitHub. The free trial gives a one-time $5 credit for 30 days (1 GB RAM, 500 MB volume). After that, move to Hobby ($5/mo).
+2. **New Project → Deploy from GitHub repo** → pick this repo.
+3. In the same project: **+ New → Database → PostgreSQL**.
+4. On the app service, **attach a volume** mounted at `/data`. Uploaded images live there and survive redeploys.
+5. On the app service, open **Variables** and set:
+
+   | Variable | Value |
+   |---|---|
+   | `NODE_ENV` | `production` |
+   | `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` (reference to the Postgres service, private network) |
+   | `DATABASE_SSL` | `false` (the private network doesn't need TLS) |
+   | `JWT_SECRET` | 64 random characters (`node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"`) |
+   | `ADMIN_EMAIL`, `ADMIN_NAME` | your admin account |
+   | `ADMIN_PASSWORD_HASH` | output of `npm run hash-password -- "<strong password>"` |
+   | `UPLOAD_DIR` | `/data/uploads` |
+   | `SEED_SAMPLE_POSTS` | `false` |
+   | `AI_PROVIDER` | `none` (or `mock`); `anthropic` costs money per call |
+   | `CORS_ORIGIN` | your public URL, e.g. `https://city546-production.up.railway.app` |
+
+6. **Settings → Networking → Generate Domain** (or add your own domain), then set `CORS_ORIGIN` to that URL and redeploy.
+7. Set a **usage limit** under account billing so the bill can't grow unexpectedly.
+
+Every push to the connected branch redeploys. Never point `npm test` at this database: the tests write and delete real rows.
+
 ---
 
 ## 7. Tests and quality checks

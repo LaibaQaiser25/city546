@@ -33,7 +33,11 @@ Before finishing a change, run `npm test`, `npm run lint` and `npm run build`.
 - Hosted Postgres needing TLS (Neon, Supabase, RDS…): set `DATABASE_SSL=true`. For a DB on the same VPS, keep it `false` and bind Postgres to localhost only.
 - New DB: run `npm run db:migrate`, or restore a `pg_dump` into an empty DB instead of migrating.
 - **Never run `npm test` against a production `DATABASE_URL`**, because it writes and deletes real rows and changes `ai_settings`. Keep `AI_PROVIDER=mock|none` in production unless the user approves the Claude API cost.
-- The hosting host isn't chosen yet. Discussed so far (2026-09-28): Railway Hobby (app + Postgres + volume, about $7–10/mo, cost driven by image egress) or a Hetzner VPS (Postgres + PM2 + Nginx/certbot). Avoid Supabase's free plan (it pauses) and Render's free Postgres (it expires).
+- **Hosting: Railway** (decided 2026-09-28). The user starts on the **free trial** ($5 one-time credit, 30 days, 1 GB RAM, 500 MB volume); Hobby ($5/mo, about $7–10 with usage) comes after.
+  - `railway.json` holds the config: the build runs `npm ci --include=dev` (Vite is a devDependency), pre-deploy runs `db:migrate && db:seed`, and the health check is `/api/health`.
+  - Postgres is a Railway service in the same project. `DATABASE_URL=${{Postgres.DATABASE_URL}}` (private network, `DATABASE_SSL=false`). Uploads go on a volume at `/data` with `UPLOAD_DIR=/data/uploads`.
+  - The full variable list and steps are in README §6, "Deploying to Railway". Keep that section in sync when env vars change.
+  - The user creates the Railway account and enters secrets themselves.
 
 ## Backend conventions
 - Route → `validate(schema, source)` (zod) → controller. Parsed input is on **`req.valid.body|query|params`**, because Express 5 makes `req.query` read-only.
