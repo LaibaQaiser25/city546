@@ -169,42 +169,79 @@ When `frontend/dist` exists, Express serves the built SPA and the API from **one
 - Serve over **HTTPS**, because the auth cookie is marked `Secure` in production.
 - To host the frontend separately (Netlify, Vercel…), build it with `VITE_API_URL=https://api.example.com/api` and add that site's origin to `CORS_ORIGIN`. Cross-site cookies also require the API and the site to share a registrable domain, because the cookie is `SameSite=Strict`.
 
-### Deploying to Railway
+### Deploying the API to a VPS (frontend on Vercel)
 
-`railway.json` in the repo root configures the build, runs migrations and the admin seed each time the server starts and health-checks `/api/health`.
+The API and PostgreSQL run on one Ubuntu VPS behind Nginx. The frontend stays on Vercel, which proxies `/api/*` and `/uploads/*` to the VPS (`frontend/vercel.json`). The auth cookie is `SameSite=Strict`, so the browser must only ever talk to the Vercel domain.
 
-1. Sign up at [railway.com](https://railway.com) with GitHub. The free trial gives a one-time $5 credit for 30 days (1 GB RAM, 500 MB volume). After that, move to Hobby ($5/mo).
-2. **New Project → Deploy from GitHub repo** → pick this repo.
-3. In the same project: **+ New → Database → PostgreSQL**.
-4. On the app service, **attach a volume** mounted at `/data`. Uploaded images live there and survive redeploys.
-5. On the app service, open **Variables** and set:
+You need an **API hostname** pointing at the VPS for HTTPS, e.g. `api.example.com` (a DNS **A record** to the server IP). Without a domain, `<ip-with-dashes>.sslip.io` (e.g. `203-0-113-7.sslip.io`) resolves to your IP and works with certbot.
 
-   | Variable | Value |
-   |---|---|
-   | `NODE_ENV` | `production` |
-   | `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` (reference to the Postgres service, private network) |
-   | `DATABASE_SSL` | `false` (the private network doesn't need TLS) |
-   | `JWT_SECRET` | 64 random characters (`node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"`) |
-   | `ADMIN_EMAIL`, `ADMIN_NAME` | your admin account |
-   | `ADMIN_PASSWORD_HASH` | output of `npm run hash-password -- "<strong password>"` |
-   | `UPLOAD_DIR` | `/data/uploads` |
-   | `SEED_SAMPLE_POSTS` | `false` |
-   | `AI_PROVIDER` | `none` (or `mock`); `anthropic` costs money per call |
-   | `CORS_ORIGIN` | your public site URL (the Vercel domain if the frontend is on Vercel) |
-   | `TRUST_PROXY` | `2` when the frontend is on Vercel (Vercel → Railway), otherwise `1` |
+**1. Server basics** (Ubuntu 24.04, ≥1 GB RAM)
 
-6. **Settings → Networking → Generate Domain** (or add your own domain), then set `CORS_ORIGIN` to your public site URL and redeploy.
-7. Set a **usage limit** under account billing so the bill can't grow unexpectedly.
+```bash
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y git nginx postgresql certbot python3-certbot-nginx
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash - && sudo apt install -y nodejs
+sudo npm i -g pm2
+sudo ufw allow OpenSSH && sudo ufw allow 'Nginx Full' && sudo ufw enable
+```
 
-#### Frontend on Vercel
+**2. Database** (listens on localhost only by default; never open port 5432)
 
-The auth cookie is `SameSite=Strict`, so the browser must talk to **one site**. `frontend/vercel.json` makes Vercel proxy `/api/*` and `/uploads/*` to Railway (and adds the SPA fallback), so readers only ever see the Vercel domain.
+```bash
+sudo -u postgres psql -c "CREATE USER city546 WITH PASSWORD '<strong db password>';"
+sudo -u postgres psql -c "CREATE DATABASE city546 OWNER city546;"
+```
 
-1. In `frontend/vercel.json`, replace `RAILWAY_DOMAIN` with the Railway domain (e.g. `city546-production.up.railway.app`).
-2. In Vercel: **Settings → General → Root Directory** = `frontend`. Under **Environment Variables**, make sure `VITE_API_URL` is **not** set, so the app calls `/api` on its own domain.
-3. Redeploy on Vercel, then open `https://<vercel-domain>/api/health`. It should return `"database":"connected"`.
+**3. App**
 
-Every push to the connected branch redeploys. Never point `npm test` at this database: the tests write and delete real rows.
+```bash
+sudo mkdir -p /var/www && sudo chown $USER /var/www
+git clone https://github.com/LaibaQaiser25/city546.git /var/www/city546
+cd /var/www/city546 && nano .env
+```
+
+`.env` on the server:
+
+| Variable | Value |
+|---|---|
+| `NODE_ENV` | `production` |
+| `PORT` | `5000` |
+| `DATABASE_URL` | `postgresql://city546:<db password>@localhost:5432/city546` |
+| `DATABASE_SSL` | `false` |
+| `JWT_SECRET` | 64 random characters (`node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"`) |
+| `ADMIN_EMAIL`, `ADMIN_NAME` | your admin account |
+| `ADMIN_PASSWORD_HASH` | output of `npm run hash-password -- "<strong password>"` |
+| `UPLOAD_DIR` | `backend/uploads` (on the VPS disk) |
+| `SEED_SAMPLE_POSTS` | `false` |
+| `AI_PROVIDER` | `none` (or `mock`); `anthropic` costs money per call |
+| `CORS_ORIGIN` | `https://<your-site>.vercel.app` |
+| `TRUST_PROXY` | `2` (Vercel → Nginx) |
+
+Then create the admin account and start the app:
+
+```bash
+npm ci && npm run db:migrate && npm run db:seed
+bash deploy/deploy.sh
+pm2 startup          # run the command it prints, so the app starts on reboot
+```
+
+**4. Nginx + HTTPS**: follow the comments at the top of `deploy/nginx-city546.conf` (copy it, replace `API_DOMAIN`, enable it, then run `certbot`). Check `https://API_DOMAIN/api/health` returns `"database":"connected"`.
+
+**5. Vercel**: in `frontend/vercel.json` replace `API_DOMAIN` with your API hostname and push. In the Vercel project, set **Root Directory** = `frontend` and make sure `VITE_API_URL` is **not** set. Redeploy, then check `https://<your-site>.vercel.app/api/health`.
+
+**6. Backups** (`crontab -e`): the database and the uploads folder.
+
+```
+0 3 * * * pg_dump postgresql://city546:<db password>@localhost/city546 | gzip > /var/backups/city546/db-$(date +\%F).sql.gz
+30 3 * * * tar czf /var/backups/city546/uploads-$(date +\%F).tgz -C /var/www/city546/backend uploads
+0 4 * * * find /var/backups/city546 -mtime +14 -delete
+```
+
+Create the folder first (`sudo mkdir -p /var/backups/city546 && sudo chown $USER /var/backups/city546`), and copy backups off the server now and then.
+
+**Updating** after a push: `cd /var/www/city546 && bash deploy/deploy.sh`.
+
+Never point `npm test` at the production database: the tests write and delete real rows.
 
 ---
 
