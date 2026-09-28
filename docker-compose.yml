@@ -1,0 +1,24 @@
+# Optional: a local PostgreSQL for development.
+#   npm run db:up      -> starts it on localhost:5432
+#   npm run db:down    -> stops it (data persists in the named volume)
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: city546-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: city546
+      POSTGRES_PASSWORD: city546_dev_password
+      POSTGRES_DB: city546
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - city546_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U city546 -d city546"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  city546_pgdata:

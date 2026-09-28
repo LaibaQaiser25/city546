@@ -1,0 +1,31 @@
+{
+  "name": "city546",
+  "version": "1.0.0",
+  "private": true,
+  "description": "city546 — daily news social platform (Vite + React + Tailwind / Express / PostgreSQL)",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "concurrently -k -n api,web -c blue,yellow \"npm:dev:backend\" \"npm:dev:frontend\"",
+    "dev:frontend": "npm run dev -w frontend",
+    "dev:backend": "npm run dev -w backend",
+    "build": "npm run build -w frontend",
+    "start": "npm run start -w backend",
+    "db:up": "docker compose up -d db",
+    "db:down": "docker compose down",
+    "db:migrate": "npm run db:migrate -w backend",
+    "db:seed": "npm run db:seed -w backend",
+    "db:setup": "npm run db:migrate && npm run db:seed",
+    "hash-password": "npm run hash-password -w backend --",
+    "test": "npm run test -w backend",
+    "lint": "npm run lint -w frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.4"
+  },
+  "engines": {
+    "node": ">=20.19"
+  }
+}

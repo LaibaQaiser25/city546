@@ -1,0 +1,110 @@
+@import 'tailwindcss';
+
+/* Class-based dark mode (toggled on <html>) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Brand palette taken from the "Words with Mirza · City 546 News HD" artwork:
+   deep navy, polished gold, broadcast red and blue. */
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --font-script: 'Great Vibes', cursive;
+  --font-urdu: 'Noto Nastaliq Urdu', serif;
+
+  --color-navy-50: #eef2fb;
+  --color-navy-100: #d9e1f5;
+  --color-navy-200: #b3c3eb;
+  --color-navy-300: #8199d6;
+  --color-navy-400: #4f6cb9;
+  --color-navy-500: #2f4c99;
+  --color-navy-600: #213a7d;
+  --color-navy-700: #1a2f66;
+  --color-navy-800: #13244f;
+  --color-navy-900: #0c1a3d;
+  --color-navy-950: #070f26;
+
+  --color-gold-50: #fbf7ec;
+  --color-gold-100: #f5ebcc;
+  --color-gold-200: #ebd699;
+  --color-gold-300: #dfbd62;
+  --color-gold-400: #d4a93d;
+  --color-gold-500: #c4952b;
+  --color-gold-600: #a77623;
+  --color-gold-700: #85581f;
+  --color-gold-800: #6e4720;
+  --color-gold-900: #5e3c1f;
+
+  --color-brand-red: #e11d2e;
+  --color-brand-blue: #1d4ed8;
+
+  --animate-shimmer: shimmer 1.6s linear infinite;
+  --animate-fade-in: fade-in 0.35s ease-out both;
+  --animate-pop-in: pop-in 0.2s ease-out both;
+
+  @keyframes shimmer {
+    from { background-position: -400px 0; }
+    to { background-position: 400px 0; }
+  }
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes pop-in {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: none; }
+  }
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-slate-50 font-sans text-slate-900 antialiased dark:bg-navy-950 dark:text-slate-100;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-gold-400;
+  }
+  ::selection {
+    @apply bg-gold-200 text-navy-900;
+  }
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-slate-200/80 bg-white shadow-sm dark:border-white/10 dark:bg-navy-900;
+  }
+  .skeleton {
+    @apply rounded-md bg-slate-200 dark:bg-navy-800;
+    background-image: linear-gradient(90deg, transparent 0, rgb(255 255 255 / 0.45) 50%, transparent 100%);
+    background-size: 400px 100%;
+    background-repeat: no-repeat;
+    animation: var(--animate-shimmer);
+  }
+  .dark .skeleton {
+    background-image: linear-gradient(90deg, transparent 0, rgb(255 255 255 / 0.06) 50%, transparent 100%);
+  }
+  .input {
+    @apply block w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-[15px] text-slate-900 shadow-xs transition
+      placeholder:text-slate-400 focus:border-gold-400 focus:ring-4 focus:ring-gold-400/20 focus:outline-none
+      dark:border-white/15 dark:bg-navy-950 dark:text-slate-100 dark:placeholder:text-slate-500;
+  }
+  .input-error {
+    @apply border-brand-red focus:border-brand-red focus:ring-brand-red/15;
+  }
+  .label {
+    @apply mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200;
+  }
+  .gold-rule {
+    @apply h-px bg-linear-to-r from-transparent via-gold-400 to-transparent;
+  }
+  /* Readable long-form article body */
+  .prose-news p {
+    @apply mb-5 text-[17px] leading-8 whitespace-pre-line text-slate-700 dark:text-slate-300;
+  }
+}

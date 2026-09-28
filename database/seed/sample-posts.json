@@ -1,0 +1,112 @@
+[
+  {
+    "category": "breaking",
+    "hoursAgo": 1,
+    "views": 1284,
+    "imageUrl": "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?auto=format&fit=crop&w=1400&q=80",
+    "heading": "City council approves new 24-hour emergency response hub for Riverside District",
+    "description": "In a unanimous late-night vote, the (fictional) Riverside District council approved a round-the-clock emergency response hub that will bring fire, ambulance and rescue teams under one roof. Officials say average response times could fall by several minutes once the facility opens next spring.",
+    "blocks": [
+      { "type": "heading", "text": "What changes for residents" },
+      { "type": "paragraph", "text": "A single helpline will route every emergency call to the new hub, where dispatchers can see the live position of every vehicle. Council members said the aim is simple: the nearest team goes first, no matter which service it belongs to." },
+      { "type": "image", "url": "https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=1400&q=80", "caption": "Local newspapers covered the council session through the night." },
+      { "type": "heading", "text": "Timeline and budget" },
+      { "type": "paragraph", "text": "Construction is expected to begin within eight weeks. The project will be funded from the district development budget, and a public progress dashboard will be updated monthly." }
+    ]
+  },
+  {
+    "category": "sports",
+    "hoursAgo": 5,
+    "views": 2310,
+    "imageUrl": "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=1400&q=80",
+    "heading": "Under-19 side clinches regional title in a last-over thriller",
+    "description": "Needing nine runs from the final over, the Riverside Under-19 team held its nerve to lift the regional trophy for the first time in a decade. The captain credited months of early-morning training sessions for the calm finish.",
+    "blocks": [
+      { "type": "heading", "text": "The final over" },
+      { "type": "paragraph", "text": "A boundary off the third ball swung the match, and two quick singles sealed it with one delivery to spare. Supporters spilled onto the field as the winning run was completed." },
+      { "type": "image", "url": "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=1400&q=80", "caption": "The squad's fitness programme included daily track sessions." },
+      { "type": "paragraph", "text": "The team now advances to the national youth championship next month." }
+    ]
+  },
+  {
+    "category": "local",
+    "hoursAgo": 9,
+    "views": 642,
+    "imageUrl": "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1400&q=80",
+    "heading": "Weekend farmers' market returns to Riverside Square",
+    "description": "After a two-month break for renovation, the weekend farmers' market is back with more than 60 stalls selling fresh produce, honey, dairy and handmade goods directly from growers in the surrounding villages.",
+    "blocks": [
+      { "type": "heading", "text": "New layout, wider walkways" },
+      { "type": "paragraph", "text": "Organisers widened walkways and added shaded seating near the fountain. Parking is available on Greenfield Road, and a free shuttle runs every 20 minutes from the bus terminal." }
+    ]
+  },
+  {
+    "category": "technology",
+    "hoursAgo": 20,
+    "views": 918,
+    "imageUrl": "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1400&q=80",
+    "heading": "Free digital skills bootcamp opens registrations for students",
+    "description": "A six-week evening bootcamp covering web basics, spreadsheets and online safety is now accepting registrations. Seats are free for students aged 16 to 24 and will be allocated on a first-come, first-served basis.",
+    "blocks": [
+      { "type": "image", "url": "https://images.unsplash.com/photo-1531297484001-80022131f5a1?auto=format&fit=crop&w=1400&q=80", "caption": "Classes will run in the community library's new computer lab." },
+      { "type": "heading", "text": "How to apply" },
+      { "type": "paragraph", "text": "Applicants can register at the library front desk with a student ID. Organisers say a second batch will open if demand is high." }
+    ]
+  },
+  {
+    "category": "business",
+    "hoursAgo": 30,
+    "views": 507,
+    "imageUrl": "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1400&q=80",
+    "heading": "Small traders report their strongest festive season in five years",
+    "description": "Shopkeepers across the old bazaar say footfall and sales rose sharply this season, helped by extended evening hours and a new pedestrian-only zone that made weekend shopping easier for families.",
+    "blocks": [
+      { "type": "heading", "text": "Digital payments on the rise" },
+      { "type": "paragraph", "text": "Traders also noted that more customers paid by mobile wallet than ever before, reducing the need to keep large amounts of cash in the shop." }
+    ]
+  },
+  {
+    "category": "health",
+    "hoursAgo": 44,
+    "views": 1103,
+    "imageUrl": "https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=1400&q=80",
+    "heading": "Mobile health camps to offer free check-ups throughout the month",
+    "description": "Health volunteers will visit twelve neighbourhoods this month with mobile clinics offering free blood pressure, sugar and eyesight checks. No appointment is needed — residents can simply walk in during camp hours.",
+    "blocks": [
+      { "type": "heading", "text": "Schedule" },
+      { "type": "paragraph", "text": "Camps run from 9 a.m. to 3 p.m. on weekdays. The full neighbourhood schedule will be posted at local mosques, schools and community centres." }
+    ]
+  },
+  {
+    "category": "world",
+    "hoursAgo": 60,
+    "views": 389,
+    "imageUrl": "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1400&q=80",
+    "heading": "Mountain tourism season opens early as mild weather clears passes",
+    "description": "Tour operators say bookings for northern valleys have started weeks earlier than usual after a mild spring cleared key mountain passes ahead of schedule.",
+    "blocks": []
+  },
+  {
+    "category": "entertainment",
+    "hoursAgo": 75,
+    "views": 1760,
+    "imageUrl": "https://images.unsplash.com/photo-1495020689067-958852a7765e?auto=format&fit=crop&w=1400&q=80",
+    "heading": "\"Words with Mirza\" launches a new weekly talk segment on City 546",
+    "description": "City 546 News HD is launching a weekly talk segment, Words with Mirza, featuring conversations on current affairs, culture and community stories. The first episode airs this Friday evening.",
+    "blocks": [
+      { "type": "heading", "text": "What to expect" },
+      { "type": "paragraph", "text": "Each episode will pair a short news round-up with an in-depth conversation. Viewers can send questions through the channel's social media pages ahead of the show." }
+    ]
+  },
+  {
+    "category": "national",
+    "hoursAgo": 96,
+    "views": 455,
+    "imageUrl": "https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&w=1400&q=80",
+    "heading": "Student science fair winners head to national finals",
+    "description": "Three student teams from district schools — including a project on low-cost water filtration — will represent the province at the national science fair finals next month.",
+    "blocks": [
+      { "type": "paragraph", "text": "Judges praised the projects for tackling everyday problems with inexpensive, locally available materials." }
+    ]
+  }
+]
