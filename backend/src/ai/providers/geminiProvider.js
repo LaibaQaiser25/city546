@@ -19,22 +19,40 @@ const blockText = (content) =>
         .map((b) => b.text)
         .join('\n\n');
 
-export function createGeminiProvider({ apiKey, model, effort, timeout, fetchImpl = fetch, retryDelayMs = 1000 }) {
-  async function call(body) {
+/**
+ * `fallbackModels` are tried in order when a model is overloaded (5xx), over its free-tier
+ * quota (429, which is per model) or retired (404). `timeout` is the budget for the whole call.
+ */
+export function createGeminiProvider({
+  apiKey,
+  model,
+  fallbackModels = [],
+  effort,
+  timeout,
+  fetchImpl = fetch,
+  retryDelayMs = 1000,
+}) {
+  const models = [...new Set([model, ...fallbackModels])];
+
+  /** One model: retries a server error once. Throws `{ tryNext: true }`-tagged errors to move on. */
+  async function callModel(name, body, deadline) {
     let lastErr;
-    for (let attempt = 0; attempt <= 2; attempt += 1) {
-      if (attempt) await new Promise((r) => setTimeout(r, retryDelayMs * attempt));
+    for (let attempt = 0; attempt <= 1; attempt += 1) {
+      if (attempt) await new Promise((r) => setTimeout(r, retryDelayMs));
+      const remaining = deadline - Date.now();
+      if (remaining <= 0) throw aiError('AI_UNAVAILABLE', 'The AI provider is unavailable right now.');
       let res;
       try {
-        res = await fetchImpl(`${BASE_URL}/models/${encodeURIComponent(model)}:generateContent`, {
+        res = await fetchImpl(`${BASE_URL}/models/${encodeURIComponent(name)}:generateContent`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey || '' },
           body: JSON.stringify(body),
-          signal: AbortSignal.timeout(timeout),
+          signal: AbortSignal.timeout(remaining),
         });
       } catch (err) {
-        lastErr = aiError('AI_UNAVAILABLE', 'The AI provider is unavailable right now.', err);
-        if (err?.name === 'TimeoutError') throw lastErr; // don't multiply a long timeout
+        // The time budget is spent: falling back would only fail again.
+        if (err?.name === 'TimeoutError') throw aiError('AI_UNAVAILABLE', 'The AI provider is unavailable right now.', err);
+        lastErr = Object.assign(aiError('AI_UNAVAILABLE', 'The AI provider is unavailable right now.', err), { tryNext: true });
         continue;
       }
       if (res.ok) return res.json();
@@ -45,19 +63,43 @@ export function createGeminiProvider({ apiKey, model, effort, timeout, fetchImpl
         throw aiError('AI_NOT_CONFIGURED', 'The AI provider rejected the API key. Check AI_API_KEY on the server.');
       }
       if (res.status === 429) {
-        throw aiError('AI_RATE_LIMITED', 'The AI provider is rate-limiting requests (free-tier limit). Try again in a minute.');
+        throw Object.assign(
+          aiError('AI_RATE_LIMITED', 'The AI provider is rate-limiting requests (free-tier limit). Try again in a minute.'),
+          { tryNext: true },
+        );
+      }
+      if (res.status === 404) {
+        throw Object.assign(aiError('AI_UNAVAILABLE', `The AI model "${name}" is not available.`), { tryNext: true });
       }
       if (res.status >= 400 && res.status < 500) {
         throw aiError('AI_BAD_REQUEST', 'The AI provider rejected the request.', new Error(detail?.error?.message || res.statusText));
       }
-      lastErr = aiError('AI_UNAVAILABLE', 'The AI provider is unavailable right now.', new Error(`HTTP ${res.status}`));
+      lastErr = Object.assign(
+        aiError('AI_UNAVAILABLE', 'The AI provider is unavailable right now.', new Error(`HTTP ${res.status}`)),
+        { tryNext: true },
+      );
+    }
+    throw lastErr;
+  }
+
+  async function call(body) {
+    const deadline = Date.now() + timeout;
+    let lastErr;
+    for (const name of models) {
+      try {
+        return { json: await callModel(name, body, deadline), usedModel: name };
+      } catch (err) {
+        if (!err.tryNext) throw err;
+        lastErr = err;
+        console.warn(`⚠️  Gemini model ${name} failed (${err.code}); ${name === models.at(-1) ? 'no fallback left' : 'trying the next one'}.`);
+      }
     }
     throw lastErr;
   }
 
   async function structured({ system, messages, schema, maxTokens = 16000 }) {
     const level = effort && THINKING_LEVEL[effort];
-    const res = await call({
+    const { json: res, usedModel } = await call({
       systemInstruction: { parts: [{ text: blockText(system) }] },
       contents: messages.map((m) => ({
         role: m.role === 'assistant' ? 'model' : 'user',
@@ -97,14 +139,14 @@ export function createGeminiProvider({ apiKey, model, effort, timeout, fetchImpl
         inputTokens: u.promptTokenCount || 0,
         outputTokens: (u.candidatesTokenCount || 0) + (u.thoughtsTokenCount || 0),
       },
-      model: res.modelVersion || model,
+      model: res.modelVersion || usedModel,
     };
   }
 
   return {
     name: 'gemini',
     model,
-    label: `Gemini (${model})`,
+    label: `Gemini (${model}${models.length > 1 ? ` + ${models.length - 1} fallback${models.length > 2 ? 's' : ''}` : ''})`,
     isDemo: false,
     structured,
     // Retrieval stays on PostgreSQL full-text search, same as the Claude provider.

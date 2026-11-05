@@ -49,6 +49,7 @@ function createProvider() {
       return createGeminiProvider({
         apiKey: env.AI_API_KEY,
         model: env.AI_MODEL,
+        fallbackModels: env.AI_FALLBACK_MODELS,
         effort: env.AI_EFFORT,
         timeout: env.AI_TIMEOUT_MS,
       });

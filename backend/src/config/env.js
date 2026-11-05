@@ -29,8 +29,13 @@ const AI_PROVIDER = (process.env.AI_PROVIDER || (process.env.AI_API_KEY || proce
 const configuredModel = process.env.AI_MODEL?.trim();
 const AI_MODEL =
   AI_PROVIDER === 'gemini'
-    ? configuredModel && !configuredModel.startsWith('claude-') ? configuredModel : 'gemini-3.8-flash'
+    ? configuredModel && !configuredModel.startsWith('claude-') ? configuredModel : 'gemini-3.6-flash'
     : configuredModel || 'claude-opus-5';
+// Tried in order when the main model is overloaded, over quota or retired (Gemini only).
+const AI_FALLBACK_MODELS = (process.env.AI_FALLBACK_MODELS ?? (AI_PROVIDER === 'gemini' ? 'gemini-3.5-flash,gemini-3.8-flash' : ''))
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
 if (JWT_SECRET.length < 32) {
   const msg = 'JWT_SECRET should be at least 32 characters long.';
   if (isProduction) throw new Error(msg);
@@ -65,6 +70,7 @@ export const env = {
   AI_PROVIDER: AI_PROVIDER,
   AI_API_KEY: (process.env.AI_API_KEY || (AI_PROVIDER === 'gemini' ? process.env.GEMINI_API_KEY : ''))?.trim() || undefined,
   AI_MODEL: AI_MODEL,
+  AI_FALLBACK_MODELS,
   AI_EFFORT: process.env.AI_EFFORT?.trim() || undefined, // low | medium | high | xhigh | max (unset = API default)
   AI_EMBEDDING_MODEL: process.env.AI_EMBEDDING_MODEL?.trim() || undefined,
   AI_ANALYSIS_MAX_POSTS: Number(process.env.AI_ANALYSIS_MAX_POSTS) || 150,

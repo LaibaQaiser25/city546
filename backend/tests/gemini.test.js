@@ -86,14 +86,45 @@ describe('gemini provider', () => {
     }
   });
 
-  test('retries server errors, then gives up as unavailable', async () => {
+  test('retries a server error once, then gives up as unavailable', async () => {
     const good = fakeFetch([{ status: 503, body: {} }, { body: okBody({ ok: 1 }) }]);
     assert.deepEqual((await provider(good.impl).structured(request)).data, { ok: 1 });
     assert.equal(good.calls.length, 2);
 
-    const bad = fakeFetch([{ status: 500, body: {} }, { status: 503, body: {} }, new TypeError('network')]);
+    const bad = fakeFetch([{ status: 500, body: {} }, new TypeError('network')]);
     await assert.rejects(provider(bad.impl).structured(request), { code: 'AI_UNAVAILABLE' });
-    assert.equal(bad.calls.length, 3);
+    assert.equal(bad.calls.length, 2);
+  });
+
+  test('falls back to the next model when one is busy, over quota or retired', async () => {
+    const modelOf = (call) => call.url.match(/models\/(.+):generateContent/)[1];
+    const { impl, calls } = fakeFetch([
+      { status: 503, body: { error: { message: 'high demand' } } },
+      { status: 503, body: {} },
+      { status: 429, body: { error: { message: 'quota' } } },
+      { status: 404, body: { error: { message: 'retired' } } },
+      { body: { ...okBody({ ok: 1 }), modelVersion: undefined } },
+    ]);
+    const p = provider(impl, { model: 'm1', fallbackModels: ['m2', 'm3', 'm4', 'm1'] });
+    const result = await p.structured(request);
+    assert.deepEqual(result.data, { ok: 1 });
+    assert.equal(result.model, 'm4');
+    assert.deepEqual(calls.map(modelOf), ['m1', 'm1', 'm2', 'm3', 'm4']);
+    assert.equal(p.label, 'Gemini (m1 + 3 fallbacks)');
+  });
+
+  test('does not fall back on a bad key or a bad request, and reports the last failure', async () => {
+    const key = fakeFetch([{ status: 403, body: {} }]);
+    await assert.rejects(provider(key.impl, { fallbackModels: ['m2'] }).structured(request), { code: 'AI_NOT_CONFIGURED' });
+    assert.equal(key.calls.length, 1);
+
+    const bad = fakeFetch([{ status: 400, body: { error: { message: 'bad schema' } } }]);
+    await assert.rejects(provider(bad.impl, { fallbackModels: ['m2'] }).structured(request), { code: 'AI_BAD_REQUEST' });
+    assert.equal(bad.calls.length, 1);
+
+    const all = fakeFetch([{ status: 503, body: {} }, { status: 503, body: {} }, { status: 429, body: {} }]);
+    await assert.rejects(provider(all.impl, { fallbackModels: ['m2'] }).structured(request), { code: 'AI_RATE_LIMITED' });
+    assert.equal(all.calls.length, 3);
   });
 
   test('blocked, truncated and malformed responses', async () => {

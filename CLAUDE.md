@@ -74,7 +74,7 @@ Before finishing a change, run `npm test`, `npm run lint` and `npm run build`.
 - **Providers:** `aiService.js` is the only entry point. `AI_PROVIDER=anthropic|gemini|mock|none`.
   - The Claude provider uses the official `@anthropic-ai/sdk`: `claude-opus-5`, adaptive thinking, `output_config.format` JSON schema, and `fallbacks: "default"` (beta `server-side-fallback-2026-07-01`).
   - Anthropic has no embeddings, so retrieval uses Postgres full-text search.
-  - The Gemini provider (`providers/geminiProvider.js`) uses plain REST `generateContent` with `responseJsonSchema`; the key goes in the `x-goog-api-key` header, never the URL. Default model `gemini-3.8-flash`. Tests inject a fake `fetchImpl`.
+  - The Gemini provider (`providers/geminiProvider.js`) uses plain REST `generateContent` with `responseJsonSchema`; the key goes in the `x-goog-api-key` header, never the URL. Default model `gemini-3.6-flash`, then `AI_FALLBACK_MODELS` (default `gemini-3.5-flash,gemini-3.8-flash`) on 5xx/429/404. `AI_TIMEOUT_MS` is the budget for the whole call, and a timeout never falls back. Tests inject a fake `fetchImpl`.
 - **All model output is re-validated** with zod in `ai/schemas.js`. Untrusted text (reference posts, profile, admin input) is wrapped with `fence()` in `ai/prompts.js`.
   - `ai/guards.js` flags numbers not present in the admin's notes, and text copied from the examples.
 - **Style analysis** runs only when reference data changes or on an explicit rebuild. It is async and single-flight, and the UI polls `/api/ai/style`. Never analyse per post.

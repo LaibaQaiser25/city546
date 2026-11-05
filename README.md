@@ -60,7 +60,8 @@ One `.env` at the repository root is shared by the backend, the migration/seed s
 | `MAX_UPLOAD_MB` | no | Maximum size of one uploaded image (default `8`). |
 | `AI_PROVIDER` | no | `anthropic` (Claude, paid), `gemini` (Google Gemini, has a free tier), `mock` (offline demo, no real AI), or `none` (AI off). Defaults to `anthropic` when a key is set, otherwise `none`. |
 | `AI_API_KEY` | for AI | API key for the chosen provider. Server-side only. Falls back to `ANTHROPIC_API_KEY` (anthropic) or `GEMINI_API_KEY` (gemini). Get a free Gemini key at https://aistudio.google.com/apikey. |
-| `AI_MODEL` | no | Model id. Default `claude-opus-5` (anthropic) or `gemini-3.8-flash` (gemini). |
+| `AI_MODEL` | no | Model id. Default `claude-opus-5` (anthropic) or `gemini-3.6-flash` (gemini). |
+| `AI_FALLBACK_MODELS` | no | Gemini only: comma-separated models tried in order when the main one is overloaded, over its free-tier quota or retired. Default `gemini-3.5-flash,gemini-3.8-flash`; set it empty to turn fallback off. |
 | `AI_EFFORT` | no | `low` \| `medium` \| `high` \| `xhigh` \| `max`. Blank uses the provider default. |
 | `AI_EMBEDDING_MODEL` | no | Reserved for embedding-capable providers (semantic retrieval). |
 | `AI_ANALYSIS_MAX_POSTS` | no | Maximum reference posts sent per style analysis (default `150`). |
