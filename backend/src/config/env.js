@@ -21,6 +21,16 @@ function required(name) {
 }
 
 const JWT_SECRET = required('JWT_SECRET');
+
+const AI_PROVIDER = (process.env.AI_PROVIDER || (process.env.AI_API_KEY || process.env.ANTHROPIC_API_KEY ? 'anthropic' : 'none'))
+  .trim()
+  .toLowerCase();
+// A leftover Claude model id (e.g. AI_MODEL=claude-opus-5) is ignored when switching to Gemini.
+const configuredModel = process.env.AI_MODEL?.trim();
+const AI_MODEL =
+  AI_PROVIDER === 'gemini'
+    ? configuredModel && !configuredModel.startsWith('claude-') ? configuredModel : 'gemini-3.8-flash'
+    : configuredModel || 'claude-opus-5';
 if (JWT_SECRET.length < 32) {
   const msg = 'JWT_SECRET should be at least 32 characters long.';
   if (isProduction) throw new Error(msg);
@@ -50,12 +60,11 @@ export const env = {
   MAX_UPLOAD_MB: Number(process.env.MAX_UPLOAD_MB) || 8,
 
   // ── AI styling (all AI calls happen server-side; keys never reach the browser) ──
-  // anthropic = Claude via the official SDK · mock = offline demo (no real AI) · none = disabled
-  AI_PROVIDER: (process.env.AI_PROVIDER || (process.env.AI_API_KEY || process.env.ANTHROPIC_API_KEY ? 'anthropic' : 'none'))
-    .trim()
-    .toLowerCase(),
-  AI_API_KEY: process.env.AI_API_KEY?.trim() || undefined,
-  AI_MODEL: process.env.AI_MODEL?.trim() || 'claude-opus-5',
+  // anthropic = Claude via the official SDK · gemini = Google Gemini (has a free tier)
+  // mock = offline demo (no real AI) · none = disabled
+  AI_PROVIDER: AI_PROVIDER,
+  AI_API_KEY: (process.env.AI_API_KEY || (AI_PROVIDER === 'gemini' ? process.env.GEMINI_API_KEY : ''))?.trim() || undefined,
+  AI_MODEL: AI_MODEL,
   AI_EFFORT: process.env.AI_EFFORT?.trim() || undefined, // low | medium | high | xhigh | max (unset = API default)
   AI_EMBEDDING_MODEL: process.env.AI_EMBEDDING_MODEL?.trim() || undefined,
   AI_ANALYSIS_MAX_POSTS: Number(process.env.AI_ANALYSIS_MAX_POSTS) || 150,

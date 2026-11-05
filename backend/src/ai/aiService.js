@@ -20,6 +20,7 @@ import {
   buildStyleBlock,
 } from './prompts.js';
 import { createAnthropicProvider } from './providers/anthropicProvider.js';
+import { createGeminiProvider } from './providers/geminiProvider.js';
 import { createMockProvider } from './providers/mockProvider.js';
 import {
   GENERATED_POST_JSON_SCHEMA,
@@ -35,6 +36,17 @@ function createProvider() {
   switch (env.AI_PROVIDER) {
     case 'anthropic':
       return createAnthropicProvider({
+        apiKey: env.AI_API_KEY,
+        model: env.AI_MODEL,
+        effort: env.AI_EFFORT,
+        timeout: env.AI_TIMEOUT_MS,
+      });
+    case 'gemini':
+      if (!env.AI_API_KEY) {
+        console.warn('⚠️  AI_PROVIDER=gemini but no AI_API_KEY / GEMINI_API_KEY is set — AI features disabled.');
+        return null;
+      }
+      return createGeminiProvider({
         apiKey: env.AI_API_KEY,
         model: env.AI_MODEL,
         effort: env.AI_EFFORT,

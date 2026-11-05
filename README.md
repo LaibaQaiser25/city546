@@ -58,9 +58,9 @@ One `.env` at the repository root is shared by the backend, the migration/seed s
 | `ADMIN_PASSWORD_HASH` | prod | Pre-computed bcrypt hash; takes priority over `ADMIN_PASSWORD`. Generate it with `npm run hash-password -- "your-password"`. |
 | `UPLOAD_DIR` | no | Folder for uploaded photos (default `backend/uploads`). Use persistent storage in production. |
 | `MAX_UPLOAD_MB` | no | Maximum size of one uploaded image (default `8`). |
-| `AI_PROVIDER` | no | `anthropic` (Claude), `mock` (offline demo, no real AI), or `none` (AI off). Defaults to `anthropic` when a key is set, otherwise `none`. |
-| `AI_API_KEY` | for AI | Anthropic API key. Server-side only. Falls back to `ANTHROPIC_API_KEY`. |
-| `AI_MODEL` | no | Claude model id (default `claude-opus-5`). |
+| `AI_PROVIDER` | no | `anthropic` (Claude, paid), `gemini` (Google Gemini, has a free tier), `mock` (offline demo, no real AI), or `none` (AI off). Defaults to `anthropic` when a key is set, otherwise `none`. |
+| `AI_API_KEY` | for AI | API key for the chosen provider. Server-side only. Falls back to `ANTHROPIC_API_KEY` (anthropic) or `GEMINI_API_KEY` (gemini). Get a free Gemini key at https://aistudio.google.com/apikey. |
+| `AI_MODEL` | no | Model id. Default `claude-opus-5` (anthropic) or `gemini-3.8-flash` (gemini). |
 | `AI_EFFORT` | no | `low` \| `medium` \| `high` \| `xhigh` \| `max`. Blank uses the provider default. |
 | `AI_EMBEDDING_MODEL` | no | Reserved for embedding-capable providers (semantic retrieval). |
 | `AI_ANALYSIS_MAX_POSTS` | no | Maximum reference posts sent per style analysis (default `150`). |
@@ -213,7 +213,7 @@ cd /var/www/city546 && nano .env
 | `ADMIN_PASSWORD_HASH` | output of `npm run hash-password -- "<strong password>"` |
 | `UPLOAD_DIR` | `backend/uploads` (on the VPS disk) |
 | `SEED_SAMPLE_POSTS` | `false` |
-| `AI_PROVIDER` | `none` (or `mock`); `anthropic` costs money per call |
+| `AI_PROVIDER` | `none` (or `mock`); `gemini` free tier is rate-limited; `anthropic` costs money per call |
 | `CORS_ORIGIN` | `https://<your-site>.vercel.app` |
 | `TRUST_PROXY` | `2` (Vercel → Nginx) |
 
@@ -406,6 +406,7 @@ Admin's raw facts (heading + details + photos) + style profile + 3 relevant exam
 
 1. **Set a provider** in `.env`:
    - Real AI: `AI_PROVIDER=anthropic` plus `AI_API_KEY=...`.
+   - Real AI, free tier: `AI_PROVIDER=gemini` plus `AI_API_KEY=...` from https://aistudio.google.com/apikey. The free tier is rate-limited, and Google may use free-tier prompts to improve its models.
    - Try it for free: `AI_PROVIDER=mock`. This is an offline demo that shows the whole workflow but doesn't write real styled content, and it's clearly labelled "Demo mode" in the UI.
 
    Run `npm run db:migrate` (migration `003`).

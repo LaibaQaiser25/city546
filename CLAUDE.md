@@ -71,9 +71,10 @@ Before finishing a change, run `npm test`, `npm run lint` and `npm run build`.
 ## AI writing-style subsystem (`backend/src/ai/`, `frontend/src/components/ai/`)
 - **Flow:** reference accounts/posts → versioned style profile (`ai_style_profiles`, one active) → `generate-post` with admin facts, the profile and about 3 retrieved examples → the admin reviews and publishes.
 - **AI output is never published automatically.** Keep it that way.
-- **Providers:** `aiService.js` is the only entry point. `AI_PROVIDER=anthropic|mock|none`.
+- **Providers:** `aiService.js` is the only entry point. `AI_PROVIDER=anthropic|gemini|mock|none`.
   - The Claude provider uses the official `@anthropic-ai/sdk`: `claude-opus-5`, adaptive thinking, `output_config.format` JSON schema, and `fallbacks: "default"` (beta `server-side-fallback-2026-07-01`).
   - Anthropic has no embeddings, so retrieval uses Postgres full-text search.
+  - The Gemini provider (`providers/geminiProvider.js`) uses plain REST `generateContent` with `responseJsonSchema`; the key goes in the `x-goog-api-key` header, never the URL. Default model `gemini-3.8-flash`. Tests inject a fake `fetchImpl`.
 - **All model output is re-validated** with zod in `ai/schemas.js`. Untrusted text (reference posts, profile, admin input) is wrapped with `fence()` in `ai/prompts.js`.
   - `ai/guards.js` flags numbers not present in the admin's notes, and text copied from the examples.
 - **Style analysis** runs only when reference data changes or on an explicit rebuild. It is async and single-flight, and the UI polls `/api/ai/style`. Never analyse per post.
